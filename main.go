@@ -53,6 +53,27 @@ func init() {
 	flag.BoolVar(&promiscuous, "promiscuous", false, "capture in promiscuous mode")
 	flag.Parse()
 
+	if listDevs {
+		// Find all devices
+		devices, err := pcap.FindAllDevs()
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+		// Print device information
+		fmt.Println("Devices found:")
+		for _, device := range devices {
+			fmt.Println("\nName: ", device.Name)
+			fmt.Println("Description: ", device.Description)
+			fmt.Println("Devices addresses: ", device.Description)
+			for _, address := range device.Addresses {
+				fmt.Println("- IP address: ", address.IP)
+				fmt.Println("- Subnet mask: ", address.Netmask)
+			}
+		}
+		os.Exit(0)
+	}
+
 	if iface == "" && file == "" {
 		log.Fatal("no interface or pcap file selected")
 		os.Exit(1)
