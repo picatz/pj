@@ -40,12 +40,14 @@ func hardwareAddrString(a []byte) string {
 var (
 	file        string
 	iface       string
+	filter      string
 	listDevs    bool
 	promiscuous bool
 )
 
 func init() {
 	flag.StringVar(&file, "file", "", "pcap file to read packets from")
+	flag.StringVar(&filter, "filter", "", "apply bpf filter to capture or pcap file")
 	flag.StringVar(&iface, "interface", "", "network interface to listen on")
 	flag.BoolVar(&listDevs, "list-devs", false, "list network interface")
 	flag.BoolVar(&promiscuous, "promiscuous", false, "capture in promiscuous mode")
@@ -68,21 +70,21 @@ func main() {
 		pcapHandle, err = pcap.OpenOffline(file)
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(0)
+			os.Exit(1)
 		}
 	} else {
 		// Find all devices
 		devices, err := pcap.FindAllDevs()
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(0)
+			os.Exit(1)
 		}
 		for _, device := range devices {
 			if device.Name == iface {
 				pcapHandle, err = pcap.OpenLive(device.Name, snapshotLen, promiscuous, pcap.BlockForever)
 				if err != nil {
 					log.Fatal(err)
-					os.Exit(0)
+					os.Exit(1)
 				}
 				deviceName = device.Name
 				deviceDesc = device.Description
@@ -96,6 +98,14 @@ func main() {
 		}
 	}
 	defer pcapHandle.Close()
+
+	if filter != "" {
+		err := pcapHandle.SetBPFFilter(filter)
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+	}
 
 	// Use the handle as a packet source to process all packets
 	packetSource := gopacket.NewPacketSource(pcapHandle, pcapHandle.LinkType())
@@ -171,6 +181,8 @@ func main() {
 				record["udp"]["src_port"] = udp.SrcPort
 				record["udp"]["dst_port"] = udp.DstPort
 				record["udp"]["checksum"] = udp.Checksum
+				record["udp"]["payload"] = string(udp.Payload)
+				record["udp"]["payload_length"] = len(udp.Payload)
 			case layers.LayerTypeICMPv4:
 				icmpv4, _ := layer.(*layers.ICMPv4)
 				record["icmpv4"] = make(map[string]interface{})
