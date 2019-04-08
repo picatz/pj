@@ -163,6 +163,8 @@ func main() {
 				}
 				record["tcp"]["options"] = options
 				record["tcp"]["padding"] = tcp.Padding
+				record["tcp"]["payload"] = string(tcp.Payload)
+				record["tcp"]["payload_length"] = len(tcp.Payload)
 			case layers.LayerTypeUDP:
 				udp, _ := layer.(*layers.UDP)
 				record["udp"] = make(map[string]interface{})
@@ -176,6 +178,7 @@ func main() {
 				record["icmpv4"]["checksum"] = icmpv4.Checksum
 				record["icmpv4"]["id"] = icmpv4.Id
 				record["icmpv4"]["seq"] = icmpv4.Seq
+				record["icmpv4"]["payload"] = string(icmpv4.Payload)
 			case layers.LayerTypeARP:
 				arp, _ := layer.(*layers.ARP)
 				record["arp"] = make(map[string]interface{})
@@ -188,6 +191,7 @@ func main() {
 				record["arp"]["source_prot_address"] = net.IP(arp.SourceProtAddress).String()
 				record["arp"]["dst_hw_address"] = hardwareAddrString(arp.DstHwAddress)
 				record["arp"]["dst_prot_address"] = net.IP(arp.DstProtAddress).String()
+				record["arp"]["payload"] = string(arp.Payload)
 			case layers.LayerTypeDNS:
 				dns, _ := layer.(*layers.DNS)
 				record["dns"] = make(map[string]interface{})
@@ -233,6 +237,7 @@ func main() {
 				record["dns"]["additionals"] = additionals
 			}
 		}
+
 		b, err := json.Marshal(record)
 		if err != nil {
 			fmt.Println(err)
