@@ -229,6 +229,7 @@ func main() {
 					question["class"] = q.Class.String()
 					questions = append(questions, question)
 				}
+				record["dns"]["questions"] = questions
 
 				answers := []string{}
 				for _, a := range dns.Answers {
