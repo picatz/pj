@@ -57,9 +57,23 @@ var (
 )
 
 func init() {
+	// Use the first, non-loopback interface if no interface is given.
+	// https://github.com/picatz/iface/blob/master/iface.go#L90
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, ifc := range ifaces {
+		// must have mac address, FlagUp and FlagBroadcast
+		if ifc.HardwareAddr != nil && ifc.Flags&net.FlagUp != 0 && ifc.Flags&net.FlagBroadcast != 0 {
+			iface = ifc.Name
+			break
+		}
+	}
+
 	flag.StringVar(&file, "file", "", "pcap file to read packets from")
 	flag.StringVar(&filter, "filter", "", "apply bpf filter to capture or pcap file")
-	flag.StringVar(&iface, "interface", "", "network interface to listen on")
+	flag.StringVar(&iface, "interface", iface, "network interface to listen on")
 	flag.BoolVar(&listDevs, "list-devs", false, "list network interfaces")
 	flag.BoolVar(&jsonIsEvil, "json-is-evil", false, "don't do any of that json stuff")
 	flag.BoolVar(&promiscuous, "promiscuous", false, "capture in promiscuous mode")
@@ -103,27 +117,10 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
-
 		// Find all devices
 		devices, err := pcap.FindAllDevs()
 		if err != nil {
 			log.Fatal(err)
-		}
-
-		// Use the first, non-loopback interface if no interface is given.
-		// https://github.com/picatz/iface/blob/master/iface.go#L90
-		if iface == "" {
-			ifaces, err := net.Interfaces()
-			if err != nil {
-				log.Fatal(err)
-			}
-			for _, ifc := range ifaces {
-				// must have mac address, FlagUp and FlagBroadcast
-				if ifc.HardwareAddr != nil && ifc.Flags&net.FlagUp != 0 && ifc.Flags&net.FlagBroadcast != 0 {
-					iface = ifc.Name
-					break
-				}
-			}
 		}
 
 		for _, device := range devices {
@@ -143,6 +140,7 @@ func main() {
 			}
 		}
 	}
+
 	defer pcapHandle.Close()
 
 	if filter != "" {
