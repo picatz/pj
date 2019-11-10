@@ -17,7 +17,7 @@ $ pj -help
   -interface string
         network interface to listen on
   -list-devs
-        list network interface
+        list network interfaces
   -promiscuous
         capture in promiscuous mode
 ```

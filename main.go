@@ -60,7 +60,7 @@ func init() {
 	flag.StringVar(&file, "file", "", "pcap file to read packets from")
 	flag.StringVar(&filter, "filter", "", "apply bpf filter to capture or pcap file")
 	flag.StringVar(&iface, "interface", "", "network interface to listen on")
-	flag.BoolVar(&listDevs, "list-devs", false, "list network interface")
+	flag.BoolVar(&listDevs, "list-devs", false, "list network interfaces")
 	flag.BoolVar(&jsonIsEvil, "json-is-evil", false, "don't do any of that json stuff")
 	flag.BoolVar(&promiscuous, "promiscuous", false, "capture in promiscuous mode")
 	// stackdriver has a 100k log entry limit...
