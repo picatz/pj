@@ -131,7 +131,6 @@ func main() {
 				pcapHandle, err = pcap.OpenLive(device.Name, snapshotLen, promiscuous, pcap.BlockForever)
 				if err != nil {
 					log.Fatal(err)
-					os.Exit(1)
 				}
 				deviceName = device.Name
 				deviceDesc = device.Description
@@ -150,7 +149,6 @@ func main() {
 		err := pcapHandle.SetBPFFilter(filter)
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
 	}
 
