@@ -12,10 +12,12 @@ $ go get github.com/picatz/pj
 
 ```console
 $ pj -help
+  -interface string
+        network interface to listen on (default "<FIRST_NON_LOOPBACK>")
   -file string
         pcap file to read packets from
-  -interface string
-        network interface to listen on
+  -filter string
+        apply bpf filter to capture or pcap file
   -list-devs
         list network interfaces
   -promiscuous
