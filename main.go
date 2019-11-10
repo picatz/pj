@@ -87,11 +87,6 @@ func init() {
 		}
 		os.Exit(0)
 	}
-
-	if iface == "" && file == "" {
-		log.Fatal("no interface or pcap file selected")
-		os.Exit(1)
-	}
 }
 
 func main() {
@@ -108,12 +103,29 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
+
 		// Find all devices
 		devices, err := pcap.FindAllDevs()
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
+
+		// Use the first, non-loopback interface if no interface is given.
+		// https://github.com/picatz/iface/blob/master/iface.go#L90
+		if iface == "" {
+			ifaces, err := net.Interfaces()
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, ifc := range ifaces {
+				// must have mac address, FlagUp and FlagBroadcast
+				if ifc.HardwareAddr != nil && ifc.Flags&net.FlagUp != 0 && ifc.Flags&net.FlagBroadcast != 0 {
+					iface = ifc.Name
+					break
+				}
+			}
+		}
+
 		for _, device := range devices {
 			if device.Name == iface {
 				pcapHandle, err = pcap.OpenLive(device.Name, snapshotLen, promiscuous, pcap.BlockForever)
