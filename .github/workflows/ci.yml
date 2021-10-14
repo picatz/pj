@@ -34,6 +34,10 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+
+    - name: Install LibPcap
+      run: apt-get install -y libpcap-dev
+
     - name: Build
       run: go build -v ./...
 
