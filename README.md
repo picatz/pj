@@ -1,11 +1,14 @@
 # pj
 
-Command-line application to convert packets into json.
+Command-line application to convert network packets into JSON.
 
 ## Installation
 
 ```console
-$ go get github.com/picatz/pj
+$ apt-get install -y libpcap-dev
+...
+$ go install github.com/picatz/pj@latest
+...
 ```
 
 ## Help Menu
