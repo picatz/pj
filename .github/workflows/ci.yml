@@ -36,7 +36,7 @@ jobs:
           ${{ runner.os }}-go-
 
     - name: Install LibPcap
-      run: apt-get install -y libpcap-dev
+      run: sudo apt-get install -y libpcap-dev
 
     - name: Build
       run: go build -v ./...
