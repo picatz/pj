@@ -16,7 +16,6 @@ import (
 var (
 	snapshotLen int32 = 65535
 	err         error
-	handle      *pcap.Handle
 	packetCount int
 )
 
@@ -307,7 +306,7 @@ func main() {
 					for _, a := range dns.Authorities {
 						authorities = append(authorities, a.String())
 					}
-					record["authorities"] = answers
+					record["authorities"] = authorities
 
 					additionals := []string{}
 					for _, a := range dns.Additionals {
@@ -467,7 +466,7 @@ func main() {
 					for _, a := range dns.Authorities {
 						authorities = append(authorities, a.String())
 					}
-					record["dns"]["authorities"] = answers
+					record["dns"]["authorities"] = authorities
 
 					additionals := []string{}
 					for _, a := range dns.Additionals {
