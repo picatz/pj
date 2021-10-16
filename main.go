@@ -239,6 +239,14 @@ func main() {
 					record["icmpv4"]["id"] = icmpv4.Id
 					record["icmpv4"]["seq"] = icmpv4.Seq
 					record["icmpv4"]["payload"] = string(icmpv4.Payload)
+					record["icmpv4"]["payload_length"] = len(icmpv4.Payload)
+				case layers.LayerTypeICMPv6:
+					icmpv6, _ := layer.(*layers.ICMPv6)
+					record["icmpv6"] = make(map[string]interface{})
+					record["icmpv6"]["type_code"] = icmpv6.TypeCode
+					record["icmpv6"]["checksum"] = icmpv6.Checksum
+					record["icmpv6"]["payload"] = icmpv6.Payload
+					record["icmpv6"]["payload_length"] = len(icmpv6.Payload)
 				case layers.LayerTypeARP:
 					arp, _ := layer.(*layers.ARP)
 					record["arp"] = make(map[string]interface{})
