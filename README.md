@@ -44,7 +44,7 @@ $ pj -interface en0
 ...
 ```
 
-Save packets captured from the default interface to the `test.pcapng` file. 
+Read packets from `test.pcapng` file.
 
 ```console
 $ pj -file test.pcapng
