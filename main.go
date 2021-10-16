@@ -36,10 +36,10 @@ func hardwareAddrString(a []byte) string {
 	return string(buf)
 }
 
-func printBiteSizedJSON(record map[string]interface{}) {
+func printRecordJSON(record map[string]map[string]interface{}) {
 	b, err := json.Marshal(record)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "failed to marshal JSON record: %v", err)
 		return
 	}
 	fmt.Println(string(b))
@@ -50,7 +50,6 @@ var (
 	iface       string
 	filter      string
 	listDevs    bool
-	biteSized   bool
 	promiscuous bool
 	jsonIsEvil  bool
 )
@@ -76,8 +75,6 @@ func init() {
 	flag.BoolVar(&listDevs, "list-devs", false, "list network interfaces")
 	flag.BoolVar(&jsonIsEvil, "json-is-evil", false, "don't do any of that json stuff")
 	flag.BoolVar(&promiscuous, "promiscuous", false, "capture in promiscuous mode")
-	// stackdriver has a 100k log entry limit...
-	flag.BoolVar(&biteSized, "bite-sized", false, "split packet json information into smaller chunks, spanning multiple lines")
 	flag.Parse()
 
 	if listDevs {
@@ -151,181 +148,7 @@ func main() {
 		}
 	}
 
-	if biteSized {
-		// Use the handle as a packet source to process all packets
-		packetSource := gopacket.NewPacketSource(pcapHandle, pcapHandle.LinkType())
-		for packet := range packetSource.Packets() {
-			packetCount++
-			record := make(map[string]interface{})
-			metaData := packet.Metadata()
-			record["packet"] = packetCount
-			record["time"] = metaData.Timestamp
-			record["truncated"] = metaData.Truncated
-			record["length"] = metaData.Length
-			record["device_name"] = deviceName
-			record["device_description"] = deviceDesc
-			record["device_addresses"] = deviceAddrs
-			printBiteSizedJSON(record)
-			for _, layer := range packet.Layers() {
-				switch layer.LayerType() {
-				case layers.LayerTypeEthernet:
-					record := make(map[string]interface{})
-					record["packet"] = packetCount
-					record["eth"] = true
-					eth, _ := layer.(*layers.Ethernet)
-					record["src"] = eth.SrcMAC.String()
-					record["dst"] = eth.DstMAC.String()
-					record["type"] = eth.EthernetType
-					printBiteSizedJSON(record)
-				case layers.LayerTypeIPv4:
-					record := make(map[string]interface{})
-					record["packet"] = packetCount
-					record["ip"] = true
-					ipv4, _ := layer.(*layers.IPv4)
-					record["version"] = ipv4.Version
-					record["ihl"] = ipv4.IHL
-					record["tos"] = ipv4.TOS
-					record["length"] = ipv4.Length
-					record["id"] = ipv4.Id
-					record["flags"] = ipv4.Flags.String()
-					record["frag_offset"] = ipv4.FragOffset
-					record["ttl"] = ipv4.TTL
-					record["protocol"] = ipv4.Protocol
-					record["checksum"] = ipv4.Checksum
-					record["src_ip"] = ipv4.SrcIP.String()
-					record["dst_ip"] = ipv4.DstIP.String()
-					options := []string{}
-					for _, option := range ipv4.Options {
-						options = append(options, option.String())
-					}
-					record["options"] = options
-					record["padding"] = ipv4.Padding
-					printBiteSizedJSON(record)
-				case layers.LayerTypeTCP:
-					record := make(map[string]interface{})
-					record["packet"] = packetCount
-					record["tcp"] = true
-					tcp, _ := layer.(*layers.TCP)
-					record["src_port"] = tcp.SrcPort
-					record["dst_port"] = tcp.DstPort
-					record["seq"] = tcp.Seq
-					record["ack"] = tcp.Ack
-					record["data_offset"] = tcp.DataOffset
-					record["fin"] = tcp.FIN
-					record["syn"] = tcp.SYN
-					record["rst"] = tcp.RST
-					record["psh"] = tcp.PSH
-					record["ack"] = tcp.ACK
-					record["urg"] = tcp.URG
-					record["ece"] = tcp.ECE
-					record["cwr"] = tcp.CWR
-					record["ns"] = tcp.NS
-					options := []string{}
-					for _, option := range tcp.Options {
-						options = append(options, option.String())
-					}
-					record["options"] = options
-					record["padding"] = tcp.Padding
-					record["payload"] = string(tcp.Payload)
-					record["payload_length"] = len(tcp.Payload)
-					printBiteSizedJSON(record)
-				case layers.LayerTypeUDP:
-					record := make(map[string]interface{})
-					record["packet"] = packetCount
-					record["udp"] = true
-					udp, _ := layer.(*layers.UDP)
-					record["src_port"] = udp.SrcPort
-					record["dst_port"] = udp.DstPort
-					record["checksum"] = udp.Checksum
-					record["payload"] = string(udp.Payload)
-					record["payload_length"] = len(udp.Payload)
-					printBiteSizedJSON(record)
-				case layers.LayerTypeICMPv4:
-					record := make(map[string]interface{})
-					record["packet"] = packetCount
-					record["icmp"] = true
-					icmpv4, _ := layer.(*layers.ICMPv4)
-					record["type_code"] = icmpv4.TypeCode.String()
-					record["checksum"] = icmpv4.Checksum
-					record["id"] = icmpv4.Id
-					record["seq"] = icmpv4.Seq
-					record["payload"] = string(icmpv4.Payload)
-					printBiteSizedJSON(record)
-				case layers.LayerTypeARP:
-					record := make(map[string]interface{})
-					record["packet"] = packetCount
-					record["arp"] = true
-					arp, _ := layer.(*layers.ARP)
-					record["addr_type"] = arp.AddrType
-					record["protocol"] = arp.Protocol
-					record["hw_address_size"] = arp.HwAddressSize
-					record["prot_address_size"] = arp.ProtAddressSize
-					record["operation"] = arp.Operation
-					record["source_hw_address"] = hardwareAddrString(arp.SourceHwAddress)
-					record["source_prot_address"] = net.IP(arp.SourceProtAddress).String()
-					record["dst_hw_address"] = hardwareAddrString(arp.DstHwAddress)
-					record["dst_prot_address"] = net.IP(arp.DstProtAddress).String()
-					record["payload"] = string(arp.Payload)
-					printBiteSizedJSON(record)
-				case layers.LayerTypeDNS:
-					record := make(map[string]interface{})
-					record["packet"] = packetCount
-					record["dns"] = true
-					dns, _ := layer.(*layers.DNS)
-					record["id"] = dns.ID
-					record["qr"] = dns.QR
-					record["op_code"] = dns.OpCode
-					record["aa"] = dns.AA
-					record["tc"] = dns.TC
-					record["rd"] = dns.RD
-					record["ra"] = dns.RA
-					record["z"] = dns.Z
-					record["response_code"] = dns.ResponseCode.String()
-					record["qd_count"] = dns.QDCount
-					record["an_count"] = dns.ANCount
-					record["ns_count"] = dns.NSCount
-					record["ar_count"] = dns.ARCount
-
-					questions := []map[string]interface{}{}
-					for _, q := range dns.Questions {
-						question := map[string]interface{}{}
-						question["name"] = string(q.Name)
-						question["type"] = q.Type.String()
-						question["class"] = q.Class.String()
-						questions = append(questions, question)
-					}
-					record["questions"] = questions
-
-					answers := []string{}
-					for _, a := range dns.Answers {
-						answers = append(answers, a.String())
-					}
-					record["answers"] = answers
-
-					authorities := []string{}
-					for _, a := range dns.Authorities {
-						authorities = append(authorities, a.String())
-					}
-					record["authorities"] = authorities
-
-					additionals := []string{}
-					for _, a := range dns.Additionals {
-						additionals = append(additionals, a.String())
-					}
-					record["additionals"] = additionals
-
-					printBiteSizedJSON(record)
-				}
-			}
-
-			b, err := json.Marshal(record)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println(string(b))
-		}
-	} else if jsonIsEvil {
+	if jsonIsEvil {
 		// Use the handle as a packet source to process all packets
 		packetSource := gopacket.NewPacketSource(pcapHandle, pcapHandle.LinkType())
 		for packet := range packetSource.Packets() {
@@ -345,7 +168,7 @@ func main() {
 			record["metadata"]["length"] = metaData.Length
 			record["metadata"]["device_name"] = deviceName
 			record["metadata"]["device_description"] = deviceDesc
-			record["metadata"]["device_addresses"] = deviceName
+			record["metadata"]["device_addresses"] = deviceAddrs
 			for _, layer := range packet.Layers() {
 				switch layer.LayerType() {
 				case layers.LayerTypeEthernet:
@@ -476,6 +299,7 @@ func main() {
 				}
 			}
 
+			printRecordJSON(record)
 			b, err := json.Marshal(record)
 			if err != nil {
 				fmt.Println(err)
