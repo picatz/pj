@@ -304,6 +304,24 @@ func main() {
 						additionals = append(additionals, a.String())
 					}
 					record["dns"]["additionals"] = additionals
+				case layers.LayerTypeDHCPv4:
+					dhcpv4, _ := layer.(*layers.DHCPv4)
+					record["dhcpv4"] = make(map[string]interface{})
+					record["dhcpv4"]["client_hwaddr"] = dhcpv4.ClientHWAddr
+					record["dhcpv4"]["client_ip"] = dhcpv4.ClientIP
+					record["dhcpv4"]["flags"] = dhcpv4.Flags
+					record["dhcpv4"]["hw_len"] = dhcpv4.HardwareLen
+					record["dhcpv4"]["hw_opts"] = dhcpv4.HardwareOpts
+					record["dhcpv4"]["hw_type"] = dhcpv4.HardwareType
+					record["dhcpv4"]["next_server_ip"] = dhcpv4.NextServerIP
+					record["dhcpv4"]["op"] = dhcpv4.Operation
+					record["dhcpv4"]["opts"] = dhcpv4.Options
+					record["dhcpv4"]["file"] = dhcpv4.File
+					record["dhcpv4"]["relay_agent_ip"] = dhcpv4.RelayAgentIP
+					record["dhcpv4"]["secs"] = dhcpv4.Secs
+					record["dhcpv4"]["server_name"] = dhcpv4.ServerName
+					record["dhcpv4"]["xid"] = dhcpv4.Xid
+					record["dhcpv4"]["your_client_ip"] = dhcpv4.YourClientIP
 				}
 			}
 
