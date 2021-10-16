@@ -55,15 +55,14 @@ $ pj -file test.pcapng
 Capture packets on the default interface, filtered using `jq` to select packets that have a TCP layer.
 
 ```console
-$ pj | jq 'select(.tcp == null)'
+$ pj | jq 'select(.tcp)'
 ...
 ```
-
 
 Capture packets on the default interface, filtered using `jq` to select packets that do NOT have a TCP layer (like DNS using UDP).
 
 ```console
-$ pj | jq 'select(.tcp != null)'
+$ pj | jq 'select(.tcp == null)'
 ...
 ```
 
