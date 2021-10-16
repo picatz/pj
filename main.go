@@ -104,17 +104,19 @@ func init() {
 }
 
 func main() {
-	var pcapHandle *pcap.Handle
 
-	var deviceName string
-	var deviceDesc string
-	var deviceAddrs = []map[string]string{}
+	var (
+		pcapHandle *pcap.Handle
+
+		deviceName  string
+		deviceDesc  string
+		deviceAddrs = []map[string]string{}
+	)
 
 	if file != "" {
 		pcapHandle, err = pcap.OpenOffline(file)
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
 	} else {
 		// Find all devices
@@ -163,7 +165,7 @@ func main() {
 			record["length"] = metaData.Length
 			record["device_name"] = deviceName
 			record["device_description"] = deviceDesc
-			record["device_addresses"] = deviceName
+			record["device_addresses"] = deviceAddrs
 			printBiteSizedJSON(record)
 			for _, layer := range packet.Layers() {
 				switch layer.LayerType() {
